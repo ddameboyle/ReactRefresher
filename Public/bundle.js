@@ -49,147 +49,161 @@
 
 	'use strict';
 	
-	function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-	
 	var React = __webpack_require__(/*! react */ 1);
 	var ReactDOM = __webpack_require__(/*! react-dom */ 158);
 	
-	var CommentBox = React.createClass({
-		displayName: 'CommentBox',
+	/*TABCHOICES lists the tabs and corresponding routes*/
+	var TabChoices = [{ 'id': 1, 'name': 'addWord', 'url': '/addWord' }, { 'id': 2, 'name': 'lookup', 'url': '/lookup' }, { 'id': 3, 'name': 'myWords', 'url': '/myWords' }, { 'id': 4, 'name': 'test', 'url': '/test' }];
+	/*TAB component will put list items in navbar*/
+	/*this.props works because of <Tab TabChoices={TabChoices}> in App*/
+	/*??? DO WE NEED BOTH this.props.url here and tab.url above???? */
+	var Tab = React.createClass({
+		displayName: 'Tab',
 	
-		getInitialState: function getInitialState() {
-			return { data: [] };
-		},
-		loadCommentsFromServer: function loadCommentsFromServer() {
-			$.ajax({
-				url: this.props.url,
-				dataType: 'json',
-				cache: false,
-				success: function (data) {
-					this.setState({ data: data });
-				}.bind(this),
-				error: function (xhr, status, err) {
-					console.error(this.props.url, status, err.toString());
-				}.bind(this)
-			});
-		},
-		handleCommentSubmit: function handleCommentSubmit(comment) {
-			var comments = this.state.data;
-			comment.id = Date.now();
-			var newComments = comments.concat([comment]);
-			this.setState({ data: newComments });
-			$.ajax({
-				url: this.props.url,
-				dataType: 'json',
-				type: 'POST',
-				data: comment,
-				success: function (data) {
-					this.setState({ data: data });
-				}.bind(this),
-				error: function (xhr, status, err) {
-					this.setState({ data: comments });
-					console.error(this.props.url, status, err.toString());
-				}.bind(this)
-			});
-		},
-		componentDidMount: function componentDidMount() {
-			this.loadCommentsFromServer();
-			setInterval(this.loadCommentsFromServer, this.props.pollInterval);
-		},
-		render: function render() {
-			return React.createElement(
-				'div',
-				{ className: 'commentBox' },
-				'Hello, world! I am a CommentBox.',
-				React.createElement(
-					'h1',
-					null,
-					'Comments'
-				),
-				React.createElement(CommentList, { data: this.state.data }),
-				React.createElement(CommentForm, { onCommentSubmit: this.handleCommentSubmit })
-			);
-		}
-	});
-	
-	var CommentList = React.createClass({
-		displayName: 'CommentList',
-	
-		render: function render() {
-			var commentNodes = this.props.data.map(function (comment) {
-				return React.createElement(
-					Comment,
-					{ author: comment.author, key: comment.id },
-					comment.text
-				);
-			});
-			return React.createElement(
-				'div',
-				{ className: 'commentList' },
-				commentNodes
-			);
-		}
-	});
-	
-	var CommentForm = React.createClass({
-		displayName: 'CommentForm',
-	
-		getInitialState: function getInitialState() {
-			return { author: '', text: '' };
-		},
-		handleAuthorChange: function handleAuthorChange(e) {
-			this.setState({ author: e.target.value });
-		},
-		handleTextChange: function handleTextChange(e) {
-			this.setState({ text: e.target.value });
-		},
-		handleSubmit: function handleSubmit(e) {
+		tabClickEvent: function tabClickEvent(e) {
 			e.preventDefault();
-			var author = this.state.author.trim();
-			var text = this.state.text.trim();
-			if (!text || !author) {
-				return;
-			}
-			this.props.onCommentSubmit({ author: author, text: text });
-			this.setState({ author: '', text: '' });
+			{/*tabsClickEvent() below is a method one level up in the Tabs component*/}
+			this.props.tabsClickEvent();
 		},
 		render: function render() {
-			var _React$createElement;
-	
+			{/*console.log("Tab this.props", this.props);*/}
 			return React.createElement(
-				'form',
-				{ className: 'commentForm', onSubmit: this.handleSubmit },
-				React.createElement('input', (_React$createElement = { type: 'text', placeholder: 'Your Name' }, _defineProperty(_React$createElement, 'placeholder', 'Your name'), _defineProperty(_React$createElement, 'value', this.state.author), _defineProperty(_React$createElement, 'onChange', this.handleAuthorChange), _React$createElement)),
-				React.createElement('input', { type: 'text', placeholder: 'Say something...', value: this.state.text, onChange: this.handleTextChange }),
-				React.createElement('input', { type: 'submit', value: 'Post' })
+				'li',
+				{ className: this.props.isCurrent ? 'current' : null },
+				React.createElement(
+					'a',
+					{ onClick: this.tabClickEvent, href: this.props.url },
+					this.props.name
+				)
+			);
+		}
+	});
+	/*TABS will create a navbar*/
+	var Tabs = React.createClass({
+		displayName: 'Tabs',
+	
+		tabsClickEvent: function tabsClickEvent(tab) {
+			this.props.changeTab(tab);
+		},
+		render: function render() {
+			{/*console.log("Tabs this", this);*/}
+			return React.createElement(
+				'nav',
+				null,
+				React.createElement(
+					'ul',
+					null,
+					this.props.TabChoices.map(function (tab) {
+						{/*console.log("Inside TabChoices.map function inside of Tabs", this);*/}
+						{/*Without tabsClickEvent.bind(this,tab), tab is undefined*/}
+						return React.createElement(Tab, { tabsClickEvent: this.tabsClickEvent.bind(this, tab), key: tab.id, url: tab.url, name: tab.name });
+						{/*without the bind(this) "this" is undefined; */}
+					}.bind(this))
+				)
 			);
 		}
 	});
 	
-	var Comment = React.createClass({
-		displayName: 'Comment',
+	var Content = React.createClass({
+		displayName: 'Content',
 	
-		rawMarkup: function rawMarkup() {
-			var rawMarkup = marked(this.props.children.toString(), { sanitize: true });
-			return { __html: rawMarkup };
+		searchWord: function searchWord() {
+			console.log(document.getElementById('test').value);
+			this.word = document.getElementById('test').value;
+		},
+		word: null,
+		addWord: function addWord() {
+			console.log("Adding this.word");
+			console.log("Setting this.word to null");
+			this.word = null;
 		},
 		render: function render() {
 			return React.createElement(
 				'div',
-				{ className: 'comment' },
-				React.createElement(
-					'h2',
-					{ className: 'commentAuthor' },
-					this.props.author
-				),
-				React.createElement('span', { dangerouslySetInnerHTML: this.rawMarkup() })
+				null,
+				this.props.currentTab === 1 ? React.createElement(
+					'div',
+					{ className: 'addWord' },
+					React.createElement(
+						'p',
+						null,
+						'Search word'
+					),
+					React.createElement('input', { placeholder: 'Seach Word', id: 'test' }),
+					React.createElement(
+						'button',
+						{ onClick: this.searchWord },
+						'Search'
+					),
+					React.createElement(
+						'p',
+						null,
+						'addWord'
+					),
+					React.createElement(
+						'button',
+						{ onClick: this.addWord },
+						'Add Word'
+					)
+				) : null,
+				this.props.currentTab === 2 ? React.createElement(
+					'div',
+					{ className: 'lookup' },
+					React.createElement(
+						'p',
+						null,
+						'lookup'
+					)
+				) : null,
+				this.props.currentTab === 3 ? React.createElement(
+					'div',
+					{ className: 'myWords' },
+					React.createElement(
+						'p',
+						null,
+						'myWords'
+					)
+				) : null,
+				this.props.currentTab === 4 ? React.createElement(
+					'div',
+					{ className: 'test' },
+					React.createElement(
+						'p',
+						null,
+						'TEST'
+					)
+				) : null
 			);
 		}
 	});
 	
-	var data = [{ id: 1, author: "Pete Hunt", text: "This is one comment" }, { id: 2, author: "Jordan Walke", text: "This is *another* comment" }];
+	/*APP is fed all of the previous components and rendered*/
+	var App = React.createClass({
+		displayName: 'App',
 	
-	ReactDOM.render(React.createElement(CommentBox, { url: '/api/comments', pollInterval: 10000 }), document.getElementById('app'));
+		getInitialState: function getInitialState() {
+			return {
+				TabChoices: TabChoices,
+				currentTab: 1
+			};
+		},
+		changeTab: function changeTab(tab) {
+			{/*console.log("changeTab: tab:",tab);*/}
+			this.setState({ currentTab: tab.id });
+		},
+		render: function render() {
+			{/*console.log("this.state", this.state);*/}
+			return React.createElement(
+				'div',
+				null,
+				React.createElement(Tabs, { currentTab: this.state.currentTab, changeTab: this.changeTab, TabChoices: this.state.TabChoices }),
+				React.createElement(Content, { currentTab: this.state.currentTab })
+			);
+		}
+	});
+	
+	/*Renders App*/
+	ReactDOM.render(React.createElement(App, null), document.getElementById('app'));
 
 /***/ },
 /* 1 */
