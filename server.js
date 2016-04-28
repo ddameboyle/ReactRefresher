@@ -33,7 +33,7 @@ app.get('/api/savedWords', function(req, res) {
 app.post('/api/savedWords', function(req, res) {
   fs.readFile(WORDS_FILE, function(err, data) {
     if (err) {
-      console.error(err);
+      console.error("ERROR INSIDE SERVER.JS", err);
       process.exit(1);
     }
     var words = JSON.parse(data);
@@ -46,7 +46,7 @@ app.post('/api/savedWords', function(req, res) {
     words.push(newWord);
     fs.writeFile(WORDS_FILE, JSON.stringify(words, null, 4), function(err) {
       if (err) {
-        console.error(err);
+        console.error("ERROR IN RES of Server.js", err);
         process.exit(1);
       }
       res.json(words);

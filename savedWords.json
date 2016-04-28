@@ -23,5 +23,23 @@
         "word": "drive",
         "definition": "what you do to direct a vehicle",
         "partOfSpeech": "verb"
+    },
+    {
+        "id": 1461825007720,
+        "word": "dog",
+        "definition": "A domesticated carnivorous mammal (Canis familiaris) related to the foxes and wolves and raised in a wide variety of breeds.",
+        "partOfSpeech": "noun"
+    },
+    {
+        "id": 1461827258885,
+        "word": "greeting",
+        "definition": "A word or gesture of welcome or salutation.",
+        "partOfSpeech": "noun"
+    },
+    {
+        "id": 1461829626616,
+        "word": "good",
+        "definition": "Being positive or desirable in nature; not bad or poor:  a good experience; good news from the hospital. ",
+        "partOfSpeech": "adjective"
     }
 ]

@@ -53,49 +53,60 @@ var Tabs = React.createClass({
 	}
 });
 
-{/*
-		if(this.searchedWord.word === null && this.searchedWord.definition === null){ console.log("ERROR: NO WORD HAS BEEN LOOKED UP.")} else {
-			console.log("Adding this.searchedWord");
-			console.log("Setting this.searchedWord to null");
-			this.searchedWord.word = null;
-		}
-*/}
-
 var Content = React.createClass({
 	getInitialState: function(){
-		return {wordData: []}
+		return {wordData: [], searchedWord: {word: null, definition: null, partOfSpeech: null}}
 	},
 	loadWordDataFromServer: function(){
+		this.loadedWordDataFromServer = true;
 		$.ajax({
 	      url: '/api/savedWords',
-	      dataType: 'json',
+	      type: 'GET',
 	      cache: false,
 	      success: function(data) {
-	        this.setState({wordData: data});
+	        this.setState({wordData: data, searchedWord: {word: null, definition: null, partOfSpeech: null}});
 	      }.bind(this),
 	      error: function(xhr, status, err) {
 	        console.error(this.props.url, status, err.toString());
 	      }.bind(this)
 	    });
+	    console.log("this.state.wordData", this.state.wordData);
 	},
+	loadedWordDataFromServer: false,
 	searchWord: function(){
 		console.log(document.getElementById('test').value);
-		this.searchedWord.word = document.getElementById('test').value;
-		$.get('http://api.wordnik.com:80/v4/word.json/' + this.searchedWord.word + '/definitions?limit=200&includeRelated=true&useCanonical=false&includeTags=false&api_key=a2a73e7b926c924fad7001ca3111acd55af2ffabf50eb4ae5',
-			function(result){ console.log(result); result[0].word});
+		console.log("THIS.SEARCHEDWORD", this.searchedWordTemp);
+		this.searchedWordTemp = document.getElementById('test').value;
+
+		var wordResults = null;
+		$.ajax({
+				url: 'http://api.wordnik.com:80/v4/word.json/' + this.searchedWordTemp + '/definitions?limit=200&includeRelated=true&useCanonical=false&includeTags=false&api_key=a2a73e7b926c924fad7001ca3111acd55af2ffabf50eb4ae5',
+				type: 'GET',
+				success: function(data) {
+					console.log("this.state", this.state);
+					this.setState({wordData: this.state.wordData, searchedWord: {word: data[0].word, definition: data[0].text, partOfSpeech: data[0].partOfSpeech}});
+					console.log("DATA", data);
+					console.log("this.state after", this.state);
+				}.bind(this),
+				error: function(xhr, status, err) {
+					console.error(xhr, status, err.toString());
+				}.bind(this)
+			});
 	},
-	searchedWord: {word: null, definition: null, partOfSpeech: null},
+	searchedWordTemp: null,
 	addWord: function(){
-		console.log("this.searchedWord", this.searchedWord);
-		if(this.searchedWord.word === null){console.log("NO WORD TO SEND!!");}
+		console.log("this.state.searchedWord", this.state.searchedWord);
+		if(this.state.searchedWord.word === null){console.log("NO WORD TO SEND!!");}
 		else{
+			console.log(this.props);
 			$.ajax({
 				url: this.props.url,
 				dataType: 'json',
 				type: 'POST',
-				data: this.searchedWord,
+				data: this.state.searchedWord,
 				success: function(data) {
-					this.setState({wordData: data});
+					this.setState({wordData: data, searchedWord: this.state.searchedWord});
+					console.log("this.state.wordData", this.state.wordData);
 				}.bind(this),
 				error: function(xhr, status, err) {
 					console.error(this.props.url, status, err.toString());
@@ -104,7 +115,18 @@ var Content = React.createClass({
 		}
 	},
     render: function(){
-        return(
+    	console.log("this.state", this.state);
+    	if (this.loadedWordDataFromServer === false){this.loadWordDataFromServer();}
+    	var wordList = this.state.wordData.map(function(word){
+			return(
+					<div>
+						<p>{word.word}</p>
+						<p>{word.partOfSpeech}</p>
+						<p>{word.definition}</p>
+					</div>
+				);
+		});        
+		return(
             <div>
                 {this.props.currentTab === 1 ?
                 <div className="addWord">
@@ -113,6 +135,9 @@ var Content = React.createClass({
                     <button onClick={this.searchWord}>Search</button>
                     <p>addWord</p>
                     <button onClick={this.addWord}>Add Word</button>
+                    <h4>{this.state.searchedWord.word}</h4>
+                    <p>{this.state.searchedWord.partOfSpeech}</p>
+                    <p>{this.state.searchedWord.definition}</p>
                 </div>
                 :null}
 
@@ -122,21 +147,27 @@ var Content = React.createClass({
                 </div>
                 :null}
 
-                {this.props.currentTab === 3 ?
-                <div className="myWords">
-                    <p>myWords</p>
-                </div>
-                :null}
+
+                {this.props.currentTab === 3 ? this.state.wordData.map(function(word){
+					return(
+						<div>
+							<p>{word.word}</p>
+							<p>{word.partOfSpeech}</p>
+							<p>{word.definition}</p>
+						</div>
+					);
+				}) :null}
 
                 {this.props.currentTab === 4 ?
                 <div className="test">
-                    <p>TEST</p>
+                    <p>test</p>
                 </div>
                 :null}
             </div>
         );
     }
 });
+
 
 /*APP is fed all of the previous components and rendered*/
 var App = React.createClass({
