@@ -55,8 +55,6 @@
 	/*TABCHOICES lists the tabs and corresponding routes*/
 	var TabChoices = [{ 'id': 1, 'name': 'addWord', 'url': '/addWord' }, { 'id': 2, 'name': 'lookup', 'url': '/lookup' }, { 'id': 3, 'name': 'myWords', 'url': '/myWords' }, { 'id': 4, 'name': 'test', 'url': '/test' }];
 	/*TAB component will put list items in navbar*/
-	/*this.props works because of <Tab TabChoices={TabChoices}> in App*/
-	/*??? DO WE NEED BOTH this.props.url here and tab.url above???? */
 	var Tab = React.createClass({
 		displayName: 'Tab',
 	
@@ -104,18 +102,59 @@
 		}
 	});
 	
+	{/*
+	 	if(this.searchedWord.word === null && this.searchedWord.definition === null){ console.log("ERROR: NO WORD HAS BEEN LOOKED UP.")} else {
+	 		console.log("Adding this.searchedWord");
+	 		console.log("Setting this.searchedWord to null");
+	 		this.searchedWord.word = null;
+	 	}
+	 */}
+	
 	var Content = React.createClass({
 		displayName: 'Content',
 	
+		getInitialState: function getInitialState() {
+			return { wordData: [] };
+		},
+		loadWordDataFromServer: function loadWordDataFromServer() {
+			$.ajax({
+				url: '/api/savedWords',
+				dataType: 'json',
+				cache: false,
+				success: function (data) {
+					this.setState({ wordData: data });
+				}.bind(this),
+				error: function (xhr, status, err) {
+					console.error(this.props.url, status, err.toString());
+				}.bind(this)
+			});
+		},
 		searchWord: function searchWord() {
 			console.log(document.getElementById('test').value);
-			this.word = document.getElementById('test').value;
+			this.searchedWord.word = document.getElementById('test').value;
+			$.get('http://api.wordnik.com:80/v4/word.json/' + this.searchedWord.word + '/definitions?limit=200&includeRelated=true&useCanonical=false&includeTags=false&api_key=a2a73e7b926c924fad7001ca3111acd55af2ffabf50eb4ae5', function (result) {
+				console.log(result);result[0].word;
+			});
 		},
-		word: null,
+		searchedWord: { word: null, definition: null, partOfSpeech: null },
 		addWord: function addWord() {
-			console.log("Adding this.word");
-			console.log("Setting this.word to null");
-			this.word = null;
+			console.log("this.searchedWord", this.searchedWord);
+			if (this.searchedWord.word === null) {
+				console.log("NO WORD TO SEND!!");
+			} else {
+				$.ajax({
+					url: this.props.url,
+					dataType: 'json',
+					type: 'POST',
+					data: this.searchedWord,
+					success: function (data) {
+						this.setState({ wordData: data });
+					}.bind(this),
+					error: function (xhr, status, err) {
+						console.error(this.props.url, status, err.toString());
+					}.bind(this)
+				});
+			}
 		},
 		render: function render() {
 			return React.createElement(
@@ -197,7 +236,7 @@
 				'div',
 				null,
 				React.createElement(Tabs, { currentTab: this.state.currentTab, changeTab: this.changeTab, TabChoices: this.state.TabChoices }),
-				React.createElement(Content, { currentTab: this.state.currentTab })
+				React.createElement(Content, { currentTab: this.state.currentTab, url: '/api/savedWords' })
 			);
 		}
 	});

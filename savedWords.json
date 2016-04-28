@@ -1,0 +1,27 @@
+[
+    {
+        "word": "car",
+        "definition": "vehicle",
+        "partOfSpeech": "noun"
+    },
+    {
+        "word": "bike",
+        "definition": "thing with two wheels",
+        "partOfSpeech": "noun"
+    },
+    {
+        "word": "cool",
+        "definition": "1. rad; 2. far out",
+        "partOfSpeech": "adjective"
+    },
+    {
+        "word": "statue",
+        "definition": "inaminate object made of clay, marble or other material; often of a person or thing",
+        "partOfSpeech": "noun"
+    },
+    {
+        "word": "drive",
+        "definition": "what you do to direct a vehicle",
+        "partOfSpeech": "verb"
+    }
+]
